@@ -1,4 +1,9 @@
-import { OrbitControls, useTexture } from "@react-three/drei";
+import {
+  Float,
+  MeshReflectorMaterial,
+  OrbitControls,
+  useTexture,
+} from "@react-three/drei";
 import { useLoader } from "@react-three/fiber";
 import { useControls } from "leva";
 import { Perf } from "r3f-perf";
@@ -17,15 +22,15 @@ export default function Experience() {
     textureVersoRepeat,
     textureVersoOffset,
   } = useControls("texture", {
-    textureRectoRepeat: { value: [1.81, 1.25] },
-    textureRectoOffset: { value: [0.06, -0.19] },
-    textureVersoRepeat: { value: [1.9, 1.5] },
-    textureVersoOffset: { value: [-0.89, -0.13] },
+    textureRectoRepeat: { value: [0.77, 0.85] },
+    textureRectoOffset: { value: [0.14, 0.08] },
+    textureVersoRepeat: { value: [0.82, 0.9] },
+    textureVersoOffset: { value: [0.11, 0.04] },
   });
 
   const { metalness, roughness } = useControls("material", {
-    metalness: { value: 0.3, min: 0, max: 1, step: 0.01 },
-    roughness: { value: 0.3, min: 0, max: 1, step: 0.01 },
+    metalness: { value: 0.91, min: 0, max: 1, step: 0.01 },
+    roughness: { value: 0.56, min: 0, max: 1, step: 0.01 },
   });
 
   // 🔧 fixes textures
@@ -44,23 +49,23 @@ export default function Experience() {
 
   textureVerso.repeat.set(...textureVersoRepeat);
   textureVerso.offset.set(...textureVersoOffset);
+  console.log(model);
 
   useEffect(() => {
     model.scene.traverse((child) => {
       if (child.isMesh) {
-        console.log("Material name:", child.material.name);
-
-        if (child.material.name === "Booster_front") {
+        if (child.material.name === "booster_front") {
           child.material.map = textureRecto;
-          child.material.metalness = metalness;
-          child.material.roughness = roughness;
-        }
-        if (child.material.name === "Booster_back") {
-          child.material.map = textureVerso;
-          child.material.metalness = metalness;
-          child.material.roughness = roughness;
+          child.material.color.set("#ffffff");
         }
 
+        if (child.material.name === "booster_back") {
+          child.material.map = textureVerso;
+          child.material.color.set("#ffffff");
+        }
+
+        child.material.metalness = metalness;
+        child.material.roughness = roughness;
         child.material.side = THREE.FrontSide;
         child.material.needsUpdate = true;
       }
@@ -73,11 +78,40 @@ export default function Experience() {
       <OrbitControls makeDefault />
 
       <directionalLight position={[1, 2, 3]} intensity={4.5} />
-      <ambientLight intensity={5.5} />
+      <ambientLight intensity={55} />
 
-      <primitive object={model.scene}>
-        <meshPhongMaterial color={"white"} />
-      </primitive>
+      <Float
+        speed={2} // vitesse d'animation (défaut: 1)
+        rotationIntensity={0.5} // rotation sur les 3 axes (défaut: 1)
+        floatIntensity={0.5} // intensité du mouvement vertical (défaut: 1)
+        floatingRange={[-0.1, 0.1]} // amplitude min/max (défaut: [-0.1, 0.1])
+      >
+        <primitive object={model.scene} />
+      </Float>
+      <mesh
+        receiveShadow
+        position-y={-0.9}
+        rotation-x={-Math.PI * 0.5}
+        scale={10}
+        onPointerDown={(e) => e.stopPropagation()}
+      >
+        <planeGeometry />
+        <MeshReflectorMaterial
+          blur={[300, 100]}
+          resolution={1024}
+          mixBlur={0.5}
+          mixStrength={1}
+          roughness={0.4}
+          depthScale={1}
+          minDepthThreshold={0.85}
+          maxDepthThreshold={1}
+          color="#0b356c"
+          metalness={0.5}
+          mirror={0.5}
+          transparent={true}
+          opacity={0.07}
+        />
+      </mesh>
     </>
   );
 }
